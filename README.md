@@ -1,6 +1,6 @@
 # Hybrid IT Management Framework code repository
 
-Welcome to the code repository of the Hybrid IT Management Framework project. 
+Welcome to the code repository of the [Hybrid IT Management Framework project](https://sienvb.github.io/hpe.html). 
 
 In this repository you will find the following files:
 
