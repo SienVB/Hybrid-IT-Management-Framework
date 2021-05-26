@@ -37,29 +37,107 @@ resource "azurerm_network_security_group" "Services-NSG" {
   name                = "Services-NSG"
   location            = azurerm_resource_group.rg_Network.location
   resource_group_name = azurerm_resource_group.rg_Network.name
-
+  ## Inbound rules
   security_rule {
-    name                       = "HTTPS"
-    priority                   = 100
+    name                       = "allow-RDPManagement"
+    priority                   = 4092
     direction                  = "Inbound"
     access                     = "Allow"
     protocol                   = "Tcp"
     source_port_range          = "*"
-    destination_port_range     = "443"
-    source_address_prefix      = "*"
-    destination_address_prefix = "*"
-  }  
+    destination_port_range     = "3389"
+    source_address_prefix      = "10.1.2.0/24"
+    destination_address_prefix = "10.3.1.0/24"
+  }
   security_rule {
-    name                       = "SSH"
-    priority                   = 101
+    name                       = "allow-WinRMManagement"
+    priority                   = 4093
     direction                  = "Inbound"
     access                     = "Allow"
     protocol                   = "Tcp"
     source_port_range          = "*"
-    destination_port_range     = "22"
+    destination_port_range     = "5986"
+    source_address_prefix      = "10.1.2.0/24"
+    destination_address_prefix = "10.3.1.0/24"
+  }
+  security_rule {
+    name                       = "allow-LocalSubnet"
+    priority                   = 4094
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_range     = "*"
+    source_address_prefix      = "10.3.1.0/24"
+    destination_address_prefix = "10.3.1.0/24"
+  } 
+  security_rule {
+    name                       = "AllowAzureLoadBalancer"
+    priority                   = 4095
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_range     = "*"
+    source_address_prefix      = "AzureLoadBalancer"
+    destination_address_prefix = "10.3.1.0/24"
+  } 
+  security_rule {
+    name                       = "block-VirtualNetwork"
+    priority                   = 4096
+    direction                  = "Inbound"
+    access                     = "Deny"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_range     = "*"
+    source_address_prefix      = "VirtualNetwork"
+    destination_address_prefix = "VirtualNetwork"
+  }
+  ## Outbound rules
+  security_rule {
+    name                       = "allow-Outbound"
+    priority                   = 4093
+    direction                  = "Outbound"
+    access                     = "Allow"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_range     = "*"
+    source_address_prefix      = "10.1.3.0/24"
+    destination_address_prefix = "10.1.0.0/16"
+  }
+  security_rule {
+    name                       = "allow-OnPremOutbound"
+    priority                   = 4094
+    direction                  = "Outbound"
+    access                     = "Allow"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_range     = "*"
+    source_address_prefix      = "10.1.3.0/24"
+    destination_address_prefix = "10.0.0.0/16"
+  }
+  security_rule {
+    name                       = "allow-AzureCloud"
+    priority                   = 4095
+    direction                  = "Outbound"
+    access                     = "Allow"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_range     = "*"
     source_address_prefix      = "*"
-    destination_address_prefix = "*"
-  }  
+    destination_address_prefix = "AzureCloud"
+  }
+  security_rule {
+    name                       = "block-Internet"
+    priority                   = 4096
+    direction                  = "Outbound"
+    access                     = "Deny"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_range     = "*"
+    source_address_prefix      = "*"
+    destination_address_prefix = "Internet"
+  }
 }
 
 # Network interface for the Service

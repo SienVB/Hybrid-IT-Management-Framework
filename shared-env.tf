@@ -11,6 +11,14 @@
 // Vault for backups
 // Backup configurations VMs
 
+# Connect to Azure keyvault for secrets
+# this keyvault has to be created before executing the Terraform configs, and can then be connected with the code below
+data "azurerm_key_vault_secret" "Secrets" {
+name = "sien"
+vault_uri = "KeyVaultURL"
+}
+
+
 # Create rg_Network
 resource "azurerm_resource_group" "rg_Network" {
   name     = "rg_Network"
@@ -105,7 +113,374 @@ resource "azurerm_subnet" "Gateway-Subnet" {
 resource "azurerm_network_security_group" "DC-NSG" {
   name                = "DC-NSG"
   location            = azurerm_resource_group.rg_Network.location
-  resource_group_name = azurerm_resource_group.rg_Network.name 
+  resource_group_name = azurerm_resource_group.rg_Network.name
+  #Inbound rules
+  security_rule {
+    name                       = "allow-LocalSubnet"
+    priority                   = 4067
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_range     = "*"
+    source_address_prefix      = "10.1.1.0/24"
+    destination_address_prefix = "10.1.1.0/24"
+  } 
+  security_rule {
+    name                       = "AllowAzureLoadBalancer"
+    priority                   = 4068
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_range     = "*"
+    source_address_prefix      = "AzureLoadBalancer"
+    destination_address_prefix = "10.1.1.0/24"
+  } 
+  security_rule {
+    name                       = "allow-ClientsNTP"
+    priority                   = 4069
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Udp"
+    source_port_range          = "*"
+    destination_port_range     = "123"
+    source_address_prefix      = "10.1.0.0/16"
+    destination_address_prefix = "10.1.1.0/24"
+  } 
+  security_rule {
+    name                       = "allow-OnPremClientsNTP"
+    priority                   = 4070
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Udp"
+    source_port_range          = "*"
+    destination_port_range     = "123"
+    source_address_prefix      = "10.0.0.0/16"
+    destination_address_prefix = "10.1.1.0/24"
+  } 
+  security_rule {
+    name                       = "allow-ClientsNetBios"
+    priority                   = 4071
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_ranges    = "137-139"
+    source_address_prefix      = "10.1.0.0/16"
+    destination_address_prefix = "10.1.1.0/24"
+  } 
+  security_rule {
+    name                       = "allow-OnPremClientsNetBios"
+    priority                   = 4072
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_ranges    = "137-139"
+    source_address_prefix      = "10.0.0.0/16"
+    destination_address_prefix = "10.1.1.0/24"
+  } 
+  security_rule {
+    name                       = "allow-ClientsKerberos"
+    priority                   = 4073
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "88"
+    source_address_prefix      = "10.1.0.0/16"
+    destination_address_prefix = "10.1.1.0/24"
+  } 
+  security_rule {
+    name                       = "allow-OnPremClientsKerberos"
+    priority                   = 4074
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "88"
+    source_address_prefix      = "10.0.0.0/16"
+    destination_address_prefix = "10.1.1.0/24"
+  } 
+  security_rule {
+    name                       = "allow-ClientsLDAP"
+    priority                   = 4075
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_range     = "389"
+    source_address_prefix      = "10.1.0.0/16"
+    destination_address_prefix = "10.1.1.0/24"
+  } 
+  security_rule {
+    name                       = "allow-OnPremClientsLDAP"
+    priority                   = 4076
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_range     = "389"
+    source_address_prefix      = "10.1.0.0/16"
+    destination_address_prefix = "10.1.1.0/24"
+  } 
+  security_rule {
+    name                       = "allow-ClientsDHCP"
+    priority                   = 4077
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Udp"
+    source_port_range          = "*"
+    destination_port_range     = "67"
+    source_address_prefix      = "10.1.0.0/16"
+    destination_address_prefix = "10.1.1.0/24"
+  } 
+  security_rule {
+    name                       = "allow-OnPremClientsDHCP"
+    priority                   = 4078
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Udp"
+    source_port_range          = "*"
+    destination_port_range     = "67"
+    source_address_prefix      = "10.0.0.0/16"
+    destination_address_prefix = "10.1.1.0/24"
+  }
+  security_rule {
+    name                       = "allow-ClientsClusterAdmin"
+    priority                   = 4079
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Udp"
+    source_port_range          = "*"
+    destination_port_range     = "137"
+    source_address_prefix      = "10.1.0.0/16"
+    destination_address_prefix = "10.1.1.0/24"
+  }
+  security_rule {
+    name                       = "allow-OnPremClientsClusterAdmin"
+    priority                   = 4080
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Udp"
+    source_port_range          = "*"
+    destination_port_range     = "137"
+    source_address_prefix      = "10.0.0.0/16"
+    destination_address_prefix = "10.1.1.0/24"
+  }
+  security_rule {
+    name                       = "allow-ClientsCluster"
+    priority                   = 4081
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_range     = "3343"
+    source_address_prefix      = "10.1.0.0/16"
+    destination_address_prefix = "10.1.1.0/24"
+  }
+  security_rule {
+    name                       = "allow-OnPremClientsCluster"
+    priority                   = 4082
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_range     = "3343"
+    source_address_prefix      = "10.0.0.0/16"
+    destination_address_prefix = "10.1.1.0/24"
+  }
+  security_rule {
+    name                       = "allow-ClientsRPC"
+    priority                   = 4083
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "135"
+    source_address_prefix      = "10.1.0.0/16"
+    destination_address_prefix = "10.1.1.0/24"
+  }
+  security_rule {
+    name                       = "allow-OnPremClientsRPC"
+    priority                   = 4084
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "135"
+    source_address_prefix      = "10.0.0.0/16"
+    destination_address_prefix = "10.1.1.0/24"
+  }
+  security_rule {
+    name                       = "allow-ClientsFTP"
+    priority                   = 4085
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "21"
+    source_address_prefix      = "10.1.0.0/16"
+    destination_address_prefix = "10.1.1.0/24"
+  }
+  security_rule {
+    name                       = "allow-OnPremClientsFTP"
+    priority                   = 4086
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "21"
+    source_address_prefix      = "10.0.0.0/16"
+    destination_address_prefix = "10.1.1.0/24"
+  }
+  security_rule {
+    name                       = "allow-ClientsSMB"
+    priority                   = 4087
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_ranges    = "445,139"
+    source_address_prefix      = "10.1.0.0/16"
+    destination_address_prefix = "10.1.1.0/24"
+  }
+  security_rule {
+    name                       = "allow-OnPremClientsSMB"
+    priority                   = 4088
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_ranges    = "445,139"
+    source_address_prefix      = "10.0.0.0/16"
+    destination_address_prefix = "10.1.1.0/24"
+  }
+  security_rule {
+    name                       = "allow-ClientsDNS"
+    priority                   = 4089
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_range     = "53"
+    source_address_prefix      = "10.1.0.0/16"
+    destination_address_prefix = "10.1.1.0/24"
+  }
+  security_rule {
+    name                       = "allow-OnPremClientsDNS"
+    priority                   = 4090
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_range     = "53"
+    source_address_prefix      = "10.0.0.0/16"
+    destination_address_prefix = "10.1.1.0/24"
+  }
+  security_rule {
+    name                       = "allow-ClientsHighPorts"
+    priority                   = 4091
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_ranges    = "1024-65535"
+    source_address_prefix      = "10.1.0.0/16"
+    destination_address_prefix = "10.1.1.0/24"
+  }
+  security_rule {
+    name                       = "allow-OnPremClientsHighPorts"
+    priority                   = 4092
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_ranges    = "1024-65535"
+    source_address_prefix      = "10.0.0.0/16"
+    destination_address_prefix = "10.1.1.0/24"
+  }
+  security_rule {
+    name                       = "allow-RDPManagement"
+    priority                   = 4093
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "3389"
+    source_address_prefix      = "10.1.2.0/24"
+    destination_address_prefix = "10.1.1.0/24"
+  }
+  security_rule {
+    name                       = "allow-WinRMManagement"
+    priority                   = 4094
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "5986"
+    source_address_prefix      = "10.1.2.0/24"
+    destination_address_prefix = "10.1.1.0/24"
+  }
+  security_rule {
+    name                       = "block-VirtualNetwork"
+    priority                   = 4095
+    direction                  = "Inbound"
+    access                     = "Deny"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_range     = "*"
+    source_address_prefix      = "VirtualNetwork"
+    destination_address_prefix = "VirtualNetwork"
+  }
+  ## Outbound rules
+  security_rule {
+    name                       = "allow-Outbound"
+    priority                   = 4093
+    direction                  = "Outbound"
+    access                     = "Allow"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_range     = "*"
+    source_address_prefix      = "10.1.1.0/24"
+    destination_address_prefix = "10.1.0.0/16"
+  }
+  security_rule {
+    name                       = "allow-OnPremOutbound"
+    priority                   = 4094
+    direction                  = "Outbound"
+    access                     = "Allow"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_range     = "*"
+    source_address_prefix      = "10.1.1.0/24"
+    destination_address_prefix = "10.0.0.0/16"
+  }
+  security_rule {
+    name                       = "allow-AzureCloud"
+    priority                   = 4095
+    direction                  = "Outbound"
+    access                     = "Allow"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_range     = "*"
+    source_address_prefix      = "*"
+    destination_address_prefix = "AzureCloud"
+  }
+  security_rule {
+    name                       = "block-Internet"
+    priority                   = 4096
+    direction                  = "Outbound"
+    access                     = "Deny"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_range     = "*"
+    source_address_prefix      = "*"
+    destination_address_prefix = "Internet"
+  }
+
+   
 }
 
 # NSG Management-NSG
@@ -115,6 +490,118 @@ resource "azurerm_network_security_group" "Management-NSG" {
   name                = "Management-NSG"
   location            = azurerm_resource_group.rg_Network.location
   resource_group_name = azurerm_resource_group.rg_Network.name 
+  ## Inbound rules
+  security_rule {
+    name                       = "allow-Bastion"
+    priority                   = 4091
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_ranges    = "3389,22"
+    source_address_prefix      = "10.1.3.0/24"
+    destination_address_prefix = "10.1.2.0/24"
+  } 
+  security_rule {
+    name                       = "allow-HTTPS"
+    priority                   = 4092
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "443"
+    source_address_prefix      = "10.1.0.0/16"
+    destination_address_prefix = "10.1.2.0/24"
+  } 
+  security_rule {
+    name                       = "allow-OnPremHTTPS"
+    priority                   = 4093
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "443"
+    source_address_prefix      = "10.0.0.0/16"
+    destination_address_prefix = "10.1.2.0/24"
+  } 
+  security_rule {
+    name                       = "allow-LocalSubnet"
+    priority                   = 4094
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_range     = "*"
+    source_address_prefix      = "10.1.2.0/24"
+    destination_address_prefix = "10.1.2.0/24"
+  } 
+  security_rule {
+    name                       = "AllowAzureLoadBalancer"
+    priority                   = 4095
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_range     = "*"
+    source_address_prefix      = "AzureLoadBalancer"
+    destination_address_prefix = "10.1.2.0/24"
+  } 
+  security_rule {
+    name                       = "block-VirtualNetwork"
+    priority                   = 4096
+    direction                  = "Inbound"
+    access                     = "Deny"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_range     = "*"
+    source_address_prefix      = "VirtualNetwork"
+    destination_address_prefix = "VirtualNetwork"
+  }
+  ## Outbound rules
+  security_rule {
+    name                       = "allow-Outbound"
+    priority                   = 4093
+    direction                  = "Outbound"
+    access                     = "Allow"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_range     = "*"
+    source_address_prefix      = "10.1.2.0/24"
+    destination_address_prefix = "10.1.0.0/16"
+  }
+  security_rule {
+    name                       = "allow-OnPremOutbound"
+    priority                   = 4094
+    direction                  = "Outbound"
+    access                     = "Allow"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_range     = "*"
+    source_address_prefix      = "10.1.2.0/24"
+    destination_address_prefix = "10.0.0.0/16"
+  }
+  security_rule {
+    name                       = "allow-AzureCloud"
+    priority                   = 4095
+    direction                  = "Outbound"
+    access                     = "Allow"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_range     = "*"
+    source_address_prefix      = "*"
+    destination_address_prefix = "AzureCloud"
+  }
+  security_rule {
+    name                       = "block-Internet"
+    priority                   = 4096
+    direction                  = "Outbound"
+    access                     = "Deny"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_range     = "*"
+    source_address_prefix      = "*"
+    destination_address_prefix = "Internet"
+  }
 }
 
 # NSG Bastion-NSG
@@ -124,117 +611,129 @@ resource "azurerm_network_security_group" "Bastion-NSG" {
   name                = "Bastion-NSG"
   location            = azurerm_resource_group.rg_Network.location
   resource_group_name = azurerm_resource_group.rg_Network.name
-
+  ## Inbound rules
   security_rule {
-    name                       = "HTTPS"
-    priority                   = 100
+    name                       = "allow-Internet"
+    priority                   = 4092
     direction                  = "Inbound"
     access                     = "Allow"
     protocol                   = "Tcp"
     source_port_range          = "*"
     destination_port_range     = "443"
-    source_address_prefix      = "*"
-    destination_address_prefix = "*"
+    source_address_prefix      = "Internet"
+    destination_address_prefix = "10.1.3.0/24"
   } 
   security_rule {
-    name                       = "communication"
-    priority                   = 101
-    direction                  = "Inbound"
-    access                     = "Allow"
-    protocol                   = "*"
-    source_port_range          = "*"
-    destination_port_range     = "8080"
-    source_address_prefix      = "*"
-    destination_address_prefix = "*"
-  }  
-  security_rule {
-    name                       = "communication2"
-    priority                   = 108
-    direction                  = "Inbound"
-    access                     = "Allow"
-    protocol                   = "*"
-    source_port_range          = "*"
-    destination_port_range     = "5701"
-    source_address_prefix      = "*"
-    destination_address_prefix = "*"
-  }  
-  security_rule {
-    name                       = "SSH"
-    priority                   = 102
+    name                       = "allow-GatewayManager"
+    priority                   = 4093
     direction                  = "Inbound"
     access                     = "Allow"
     protocol                   = "Tcp"
     source_port_range          = "*"
-    destination_port_range     = "22"
-    source_address_prefix      = "*"
-    destination_address_prefix = "*"
-  }   
+    destination_port_range     = "443"
+    source_address_prefix      = "GatewayManager"
+    destination_address_prefix = "10.1.3.0/24"
+  } 
   security_rule {
-    name                       = "RDP"
-    priority                   = 110
+    name                       = "allow-LocalSubnet"
+    priority                   = 4094
     direction                  = "Inbound"
     access                     = "Allow"
-    protocol                   = "Tcp"
+    protocol                   = "*"
     source_port_range          = "*"
-    destination_port_range     = "3389"
-    source_address_prefix      = "*"
-    destination_address_prefix = "*"
-  }  
+    destination_port_range     = "*"
+    source_address_prefix      = "10.1.3.0/24"
+    destination_address_prefix = "10.1.3.0/24"
+  } 
   security_rule {
-    name                       = "SSH-out"
-    priority                   = 103
-    direction                  = "Outbound"
+    name                       = "AllowAzureLoadBalancer"
+    priority                   = 4095
+    direction                  = "Inbound"
     access                     = "Allow"
     protocol                   = "*"
-    source_port_range          = "22"
+    source_port_range          = "*"
     destination_port_range     = "*"
-    source_address_prefix      = "*"
-    destination_address_prefix = "*"
-  }  
+    source_address_prefix      = "AzureLoadBalancer"
+    destination_address_prefix = "10.1.3.0/24"
+  } 
   security_rule {
-    name                       = "HTTPS-out"
-    priority                   = 104
+    name                       = "block-VirtualNetwork"
+    priority                   = 4096
+    direction                  = "Inbound"
+    access                     = "Deny"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_range     = "*"
+    source_address_prefix      = "VirtualNetwork"
+    destination_address_prefix = "VirtualNetwork"
+  }
+  ## Outbound rules
+  security_rule {
+    name                       = "allow-GetSessionInformation"
+    priority                   = 4091
     direction                  = "Outbound"
     access                     = "Allow"
     protocol                   = "*"
-    source_port_range          = "443"
-    destination_port_range     = "*"
+    source_port_range          = "*"
+    destination_port_range     = "80"
     source_address_prefix      = "*"
-    destination_address_prefix = "*" 
-    }
-    security_rule {
-    name                       = "HTTP-out"
-    priority                   = 105
+    destination_address_prefix = "Internet"
+  }
+  security_rule {
+    name                       = "allow-SshRdp"
+    priority                   = 4092
     direction                  = "Outbound"
     access                     = "Allow"
     protocol                   = "*"
-    source_port_range          = "80"
-    destination_port_range     = "*"
+    source_port_range          = "*"
+    destination_port_ranges    = "22,3389"
     source_address_prefix      = "*"
-    destination_address_prefix = "*"
-    }
-    security_rule {
-    name                       = "communication-out"
-    priority                   = 106
+    destination_address_prefix = "10.1.0.0/16"
+  }
+  security_rule {
+    name                       = "allow-OnPremSshRdp"
+    priority                   = 4093
     direction                  = "Outbound"
     access                     = "Allow"
     protocol                   = "*"
-    source_port_range          = "8080"
-    destination_port_range     = "*"
+    source_port_range          = "*"
+    destination_port_ranges    = "22,3389"
     source_address_prefix      = "*"
-    destination_address_prefix = "*"
-    }
-    security_rule {
-    name                       = "communication-out2"
-    priority                   = 107
+    destination_address_prefix = "10.0.0.0/16"
+  }
+  security_rule {
+    name                       = "allow-BastionComm"
+    priority                   = 4094
     direction                  = "Outbound"
     access                     = "Allow"
     protocol                   = "*"
-    source_port_range          = "5701"
+    source_port_range          = "*"
+    destination_port_ranges    = "8080,5701"
+    source_address_prefix      = "VirtualNetwork"
+    destination_address_prefix = "VirtualNetwork"
+  } 
+  security_rule {
+    name                       = "allow-AzureCloud"
+    priority                   = 4095
+    direction                  = "Outbound"
+    access                     = "Allow"
+    protocol                   = "*"
+    source_port_range          = "*"
     destination_port_range     = "*"
     source_address_prefix      = "*"
-    destination_address_prefix = "*"
-    }
+    destination_address_prefix = "AzureCloud"
+  }
+  security_rule {
+    name                       = "block-Internet"
+    priority                   = 4096
+    direction                  = "Outbound"
+    access                     = "Deny"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_range     = "*"
+    source_address_prefix      = "*"
+    destination_address_prefix = "Internet"
+  }
 }
 
 
@@ -382,7 +881,7 @@ resource "azurerm_virtual_machine" "DC" {
     computer_name  = "DC"
     # Note: you can't use admin or Administrator in here, Azure won't allow you to do so :-)
     admin_username = "sien"
-    admin_password = "XXXX"
+    admin_password = "${data.azurerm_key_vault_secret.Secrets.value}"
     custom_data    = "${file("./files/winrm2.ps1")}"
   }
 
@@ -397,7 +896,7 @@ resource "azurerm_virtual_machine" "DC" {
       pass         = "oobeSystem"
       component    = "Microsoft-Windows-Shell-Setup"
       setting_name = "AutoLogon"
-      content      = "<AutoLogon><Password><Value>XXXX</Value></Password><Enabled>true</Enabled><LogonCount>1</LogonCount><Username>sien</Username></AutoLogon>"
+      content      = "<AutoLogon><Password><Value>${data.azurerm_key_vault_secret.Secrets.value}</Value></Password><Enabled>true</Enabled><LogonCount>1</LogonCount><Username>sien</Username></AutoLogon>"
     }
     additional_unattend_config {
       pass         = "oobeSystem"
@@ -447,7 +946,7 @@ resource "azurerm_virtual_machine" "ManagementVM0" {
     computer_name  = "ManagementVM0"
     # Note: you can't use admin or Administrator in here, Azure won't allow you to do so :-)
     admin_username = "sien"
-    admin_password = "XXXX"
+    admin_password = "${data.azurerm_key_vault_secret.Secrets.value}"
     custom_data    = "${file("./files/winrmClient.ps1")}"
   }
 
@@ -462,7 +961,7 @@ resource "azurerm_virtual_machine" "ManagementVM0" {
       pass         = "oobeSystem"
       component    = "Microsoft-Windows-Shell-Setup"
       setting_name = "AutoLogon"
-      content      = "<AutoLogon><Password><Value>XXXX</Value></Password><Enabled>true</Enabled><LogonCount>1</LogonCount><Username>sien</Username></AutoLogon>"
+      content      = "<AutoLogon><Password><Value>${data.azurerm_key_vault_secret.Secrets.value}</Value></Password><Enabled>true</Enabled><LogonCount>1</LogonCount><Username>sien</Username></AutoLogon>"
     }
     additional_unattend_config {
       pass         = "oobeSystem"

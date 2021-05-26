@@ -195,7 +195,7 @@ resource "azurerm_virtual_machine" "On-Prem-DC" {
     computer_name  = "On-Prem-DC"
     # Note: you can't use admin or Administrator in here, Azure won't allow you to do so :-)
     admin_username = "sien"
-    admin_password = "XXXX"
+    admin_password = "${data.azurerm_key_vault_secret.Secrets.value}"
     custom_data    = "${file("./files/winrm.ps1")}"
   }
 
@@ -210,7 +210,7 @@ resource "azurerm_virtual_machine" "On-Prem-DC" {
       pass         = "oobeSystem"
       component    = "Microsoft-Windows-Shell-Setup"
       setting_name = "AutoLogon"
-      content      = "<AutoLogon><Password><Value>XXXX</Value></Password><Enabled>true</Enabled><LogonCount>1</LogonCount><Username>sien</Username></AutoLogon>"
+      content      = "<AutoLogon><Password><Value>${data.azurerm_key_vault_secret.Secrets.value}</Value></Password><Enabled>true</Enabled><LogonCount>1</LogonCount><Username>sien</Username></AutoLogon>"
     }
     additional_unattend_config {
       pass         = "oobeSystem"
@@ -254,7 +254,7 @@ resource "azurerm_virtual_machine" "On-Prem-ADC" {
     computer_name  = "On-Prem-ADC"
     # Note: you can't use admin or Administrator in here, Azure won't allow you to do so :-)
     admin_username = "sien"
-    admin_password = "XXXX"
+    admin_password = "${data.azurerm_key_vault_secret.Secrets.value}"
     custom_data    = "${file("./files/winrmADC.ps1")}"
   }
 
@@ -269,7 +269,7 @@ resource "azurerm_virtual_machine" "On-Prem-ADC" {
       pass         = "oobeSystem"
       component    = "Microsoft-Windows-Shell-Setup"
       setting_name = "AutoLogon"
-      content      = "<AutoLogon><Password><Value>XXXX</Value></Password><Enabled>true</Enabled><LogonCount>1</LogonCount><Username>sien</Username></AutoLogon>"
+      content      = "<AutoLogon><Password><Value>${data.azurerm_key_vault_secret.Secrets.value}</Value></Password><Enabled>true</Enabled><LogonCount>1</LogonCount><Username>sien</Username></AutoLogon>"
     }
     additional_unattend_config {
       pass         = "oobeSystem"
@@ -313,7 +313,7 @@ resource "azurerm_virtual_machine" "On-Prem-Client" {
     computer_name  = "On-Prem-Client"
     # Note: you can't use admin or Administrator in here, Azure won't allow you to do so :-)
     admin_username = "sien"
-    admin_password = "XXXX"
+    admin_password = "${data.azurerm_key_vault_secret.Secrets.value}"
     custom_data    = "${file("./files/winrmclient.ps1")}"
   }
   os_profile_windows_config {
@@ -327,7 +327,7 @@ resource "azurerm_virtual_machine" "On-Prem-Client" {
       pass         = "oobeSystem"
       component    = "Microsoft-Windows-Shell-Setup"
       setting_name = "AutoLogon"
-      content      = "<AutoLogon><Password><Value>XXXX</Value></Password><Enabled>true</Enabled><LogonCount>1</LogonCount><Username>sien</Username></AutoLogon>"
+      content      = "<AutoLogon><Password><Value>${data.azurerm_key_vault_secret.Secrets.value}</Value></Password><Enabled>true</Enabled><LogonCount>1</LogonCount><Username>sien</Username></AutoLogon>"
     }
     additional_unattend_config {
       pass         = "oobeSystem"
